@@ -36,10 +36,15 @@ export default function Player({ frames, incrimentX, incrimentY, duration, actio
 
                 const offsetX = actions[e.key].offsetX;
                 const offsetY = actions[e.key].offsetY;
-                const x = (((position.current.x + xhelp) / incrimentX) + .5) | 0;
-                const y = (((position.current.y + yhelp) / incrimentY) + .5) | 0;
-
-                if (y >= 0 && y < bounds.current.h && x >= 0 && x < bounds.current.w && !bounds.current.map[y][x]) {
+                const x = ((position.current.x + xhelp) / incrimentX + .5) | 0;
+                const y = ((position.current.y + yhelp) / incrimentY) | 0;
+                console.log("here: ", xhelp, yhelp, position.current.x / incrimentX, position.current.y / incrimentY);
+                if (y >= 0 && y < bounds.current.h && x >= 0 && x < bounds.current.w) {
+                    //if (bounds.current.map[y][x]) {
+                      //  xhelp = x * incrimentX - (position.current.x + xhelp);
+                       // yhelp = y * incrimentY - (position.current.y + yhelp);
+                       // console.log("here2: ", xhelp, yhelp, x, y);
+                    //}
                     const a = animation({
                         callback: (p) => {
                             elementRef.current.style.backgroundPosition = offsetX + Math.ceil(frames * p) * incrimentX + "px " + offsetY + "px";

@@ -22,7 +22,8 @@ export default function Table({world_map, position, spritesheets, display_amount
             left: position.x + "px",
             bottom: position.y + "px"
         }}>
-        <button onClick={() => setInfo(handleClick(-1, info, spritesheets, display_amount))}>left</button>
+        <button style={{ padding: 0, border: 0, fontSize: "small" }} onClick={() => setInfo(handleClick(-1, info, spritesheets, display_amount))}>left</button>
+        <button style={{ padding: 0, border: 0, fontSize: "small" }} onClick={() => setInfo(handleClick(1, info, spritesheets, display_amount))}>right</button>
         <div style={{
             backgroundImage: `url(${texture.src})`,
             height: texture.incrimentY + "px",
@@ -55,7 +56,6 @@ export default function Table({world_map, position, spritesheets, display_amount
                 ></Slide>
             )}
         </div>
-        <button onClick={() => setInfo(handleClick(1, info, spritesheets, display_amount))}>right</button>
     </div>);
 }
 

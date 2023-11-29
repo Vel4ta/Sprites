@@ -31,7 +31,7 @@ public class SpriteSheetController : ControllerBase
         return _context.spriteSheetData;
     }
 
-    [HttpPost(Name = "GetSpriteSheet")]
+    [HttpPost(Name = "GetSpriteSheet"), Route("[action]")]
     public IEnumerable<SpriteSheet> Get(List<SpriteIdentifier> idents)
     {
         List<SpriteSheet> result = new List<SpriteSheet>();
@@ -120,7 +120,7 @@ public class SpriteSheetController : ControllerBase
             switch (request.Operation)
             {
                 case "GetBounds":
-                    responses.Add(new Bounds(request.Args).makeBounds());
+                    responses.Add(new Bounds(request.Args).makeAABBTree());
                     break;
                 case "GetAction":
                     responses.Add(makeAction(new Sprite { Title = request.Args[0]}));
