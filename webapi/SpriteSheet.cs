@@ -115,9 +115,24 @@ public class AABB
     public double Y { get; set; }
     public double MaxX => X + Width;
     public double MaxY => Y + Height;
-    public bool Intersects(AABB other) => MaxX > other.X && X < other.MaxX && MaxY > other.Y && Y < other.MaxY;
+    public bool Intersects(AABB other) => MaxX >= other.X && X <= other.MaxX && MaxY >= other.Y && Y <= other.MaxY;
     public bool LessThan(AABB other) => X < other.X && Y < other.Y;
-    public double Distance(AABB other) => double.Sqrt((other.X - X) * (other.X - X) + (other.Y - Y) * (other.Y - Y));
+    public double Distance(AABB other) {
+        double closestX = Math.Min(Math.Min(other.X - X, other.X - MaxX), Math.Min(other.MaxX - X, other.MaxX - MaxX));
+        double closestY = Math.Min(Math.Min(other.Y - Y, other.Y - MaxY), Math.Min(other.MaxY - Y, other.MaxY - MaxY));
+        return double.Sqrt(closestX * closestX + closestY * closestY);
+    }
+    public double Area() => Width * Height;
+    public double Area(AABB other)
+    {
+        double xval = Math.Min(X, other.X);
+        double yval = Math.Min(Y, other.Y);
+        double mxval = Math.Max(MaxX, other.MaxX);
+        double myval = Math.Max(MaxY, other.MaxY);
+        double w = mxval - xval; 
+        double h = myval - yval;
+        return w * h;
+    }
     public override string ToString()
     {
         return "Width: " + Width + " Height: " + Height + " X: " + X + " Y: " + Y + " MaxX: " + MaxX + " MaxY: " + MaxY + "\n";
@@ -133,6 +148,11 @@ public class Node
     public int height { get; set; } = 1;
     public required AABB value { get; set; }
     public bool IsLeaf => left == index && right == index;
+    public override string ToString()
+    {
+        return "parent: " + parent + " index: " + index + " left: " + left + " right: " + right + "\n\tvalue: " + value.ToString() + " leaf?: " + IsLeaf + "\n";
+
+    }
 }
 
 public class Tree
@@ -142,6 +162,64 @@ public class Tree
     public List<Node> Nodes { get; set; } = new List<Node>();
     public int Length => Nodes.Count;
 
+    public void Insert2(AABB value)
+    {
+        if (this.Nodes.IsNullOrEmpty())
+        {
+            this.Nodes.Add(new Node
+            {
+                parent = Root,
+                index = Root,
+                left = Root,
+                right = Root,
+                value = value
+            });
+            return;
+        }
+
+        int cur = Root;
+        while (!Nodes[cur].IsLeaf)
+        {
+            if (value.Area(Nodes[cur].value) < value.Area(Nodes[cur].value))
+            {
+                cur = Nodes[cur].left;
+            }
+            else if (cur != Nodes[cur].right && value.Area() > Nodes[cur].value.Area())
+            {
+                cur = Nodes[cur].right;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        int tl = this.Length;
+        if (value.Area() < Nodes[cur].value.Area())
+        {
+            Nodes[cur].left = tl;
+            Nodes.Add(new Node
+            {
+                parent = cur,
+                index = tl,
+                left = tl,
+                right = tl,
+                value = value
+            });
+        }
+        else
+        {
+            Nodes[cur].right = tl;
+            Nodes.Add(new Node
+            {
+                parent = cur,
+                index = tl,
+                left = tl,
+                right = tl,
+                value = value
+            });
+        }
+    }
     public void Insert(AABB value)
     {
         if (this.Nodes.IsNullOrEmpty()) {
@@ -161,7 +239,7 @@ public class Tree
         {
             if (Nodes[Nodes[cur].left].IsLeaf && Nodes[Nodes[cur].right].IsLeaf)
             {
-                if ((Nodes[Nodes[cur].left].value.Width + value.Width) * (Nodes[Nodes[cur].left].value.Height + value.Height) < (Nodes[Nodes[cur].right].value.Width + value.Width) * (Nodes[Nodes[cur].right].value.Height + value.Height))
+                if (value.Area(Nodes[Nodes[cur].left].value) < value.Area(Nodes[Nodes[cur].right].value))
                 {
                     cur = Nodes[cur].left;
                 } else
@@ -171,7 +249,7 @@ public class Tree
                 break;
             }
 
-            if (!Nodes[Nodes[cur].right].IsLeaf && !Nodes[Nodes[cur].left].IsLeaf)
+            if (!Nodes[Nodes[cur].left].IsLeaf && !Nodes[Nodes[cur].right].IsLeaf)
             {
                 if (value.Intersects(Nodes[Nodes[cur].left].value))
                 {
@@ -179,7 +257,7 @@ public class Tree
                 } else if (value.Intersects(Nodes[Nodes[cur].right].value))
                 {
                     cur = Nodes[cur].right;
-                } else if (value.Distance(Nodes[Nodes[cur].left].value) < value.Distance(Nodes[Nodes[cur].right].value))
+                } else if (value.Area(Nodes[Nodes[cur].left].value) < value.Area(Nodes[Nodes[cur].right].value))
                 {
                     cur = Nodes[cur].left;
                 } else
@@ -189,21 +267,24 @@ public class Tree
                 continue;
             }
 
-            if (Nodes[Nodes[cur].left].IsLeaf && !value.Intersects(Nodes[Nodes[cur].right].value) && value.Distance(Nodes[Nodes[cur].left].value) < value.Distance(Nodes[Nodes[cur].right].value))
+            if (value.Area(Nodes[Nodes[cur].left].value) < value.Area(Nodes[Nodes[cur].right].value))
             {
                 cur = Nodes[cur].left;
-            } else
+            }
+            else
             {
                 cur = Nodes[cur].right;
             }
         }
+
+
 
         if (Nodes[cur].IsLeaf)
         {
             int left;
             int right;
             int p = Length + 1;
-            double width, height, x, y;
+            
 
             if (Root == cur)
             {
@@ -221,29 +302,13 @@ public class Tree
                 }
             }
 
+            double x = Math.Min(value.X, Nodes[cur].value.X);
+            double y = Math.Min(value.Y, Nodes[cur].value.Y);
+            double width = Math.Max(value.MaxX, Nodes[cur].value.MaxX) - x;
+            double height = Math.Max(value.MaxY, Nodes[cur].value.MaxY) - y;
+
             bool xval = Nodes[cur].value.X < value.X;
             bool yval = Nodes[cur].value.Y < value.Y;
-
-            if (xval)
-            {
-                width = value.MaxX - Nodes[cur].value.X;
-                x = Nodes[cur].value.X;
-            } else
-            {
-                width = Nodes[cur].value.MaxX - value.X;
-                x = value.X;
-            }
-
-            if (yval)
-            {
-                height = value.MaxY - Nodes[cur].value.Y;
-                y = Nodes[cur].value.Y;
-            }
-            else
-            {
-                height = Nodes[cur].value.MaxY - value.Y;
-                y = value.Y;
-            }
 
             if (xval && yval)
             {
@@ -292,7 +357,6 @@ public class Tree
 
         while (true)
         {
-            Console.WriteLine(ToString());
             int left = TreeHeight(cur, Nodes[cur].left);
             int right = TreeHeight(cur, Nodes[cur].right);
             Nodes[cur].height = 1 + int.Max(left, right);
@@ -301,25 +365,21 @@ public class Tree
             bool sign = left < right;
 
             int new_root;
-            if (balance > 1 && !sign && value.LessThan(Nodes[Nodes[cur].left].value))
+            if (balance > 1 && !sign && value.Intersects(Nodes[Nodes[cur].left].value))
             {
-                Console.WriteLine("here1");
                 new_root = RightRotate(cur);
             }
-            else if (balance > 1 && sign && !value.LessThan(Nodes[Nodes[cur].right].value))
+            else if (balance > 1 && sign && !value.Intersects(Nodes[Nodes[cur].right].value))
             {
-                Console.WriteLine("here2");
                 new_root = LeftRotate(cur);
             }
-            else if (balance > 1 && !sign && !value.LessThan(Nodes[Nodes[cur].left].value))
+            else if (balance > 1 && !sign && !value.Intersects(Nodes[Nodes[cur].left].value))
             {
-                Console.WriteLine("here3");
                 Nodes[cur].left = LeftRotate(Nodes[cur].left);
                 new_root = RightRotate(cur);
             }
-            else if (balance > 1 && sign && value.LessThan(Nodes[Nodes[cur].right].value))
+            else if (balance > 1 && sign && value.Intersects(Nodes[Nodes[cur].right].value))
             {
-                Console.WriteLine("here4");
                 Nodes[cur].right = RightRotate(Nodes[cur].right);
                 new_root = LeftRotate(cur);
             }
@@ -335,46 +395,30 @@ public class Tree
 
             AdjustParent(cur);
 
-            /*if (Nodes[cur].value.X < Nodes[Nodes[cur].parent].value.X)
-            {
-                Nodes[Nodes[cur].parent].value.Width += Nodes[Nodes[cur].parent].value.X;
-                Nodes[Nodes[cur].parent].value.X = Nodes[cur].value.X;
-            }
-
-            if (Nodes[cur].value.Y < Nodes[Nodes[cur].parent].value.Y)
-            {
-                Nodes[Nodes[cur].parent].value.Height += Nodes[Nodes[cur].parent].value.Y - Nodes[cur].value.Y;
-                Nodes[Nodes[cur].parent].value.Y = Nodes[cur].value.Y;
-            }
-
-            if (Nodes[cur].value.MaxX > Nodes[Nodes[cur].parent].value.MaxX)
-            {
-                Nodes[Nodes[cur].parent].value.Width += Nodes[cur].value.MaxX - Nodes[Nodes[cur].parent].value.MaxX;
-            }
-
-            if (Nodes[cur].value.MaxY > Nodes[Nodes[cur].parent].value.MaxY)
-            {
-                Nodes[Nodes[cur].parent].value.Height += Nodes[cur].value.MaxY - Nodes[Nodes[cur].parent].value.MaxY;
-            } */
-
             cur = Nodes[cur].parent;
         }
     }
 
     public void AdjustParent(int cur)
     {
-        if (Nodes[cur].value.X < Nodes[Nodes[cur].parent].value.X)
-        {
-            Nodes[Nodes[cur].parent].value.Width += Nodes[Nodes[cur].parent].value.X;
-            Nodes[Nodes[cur].parent].value.X = Nodes[cur].value.X;
-        }
 
+        Nodes[Nodes[cur].parent].value.X = Math.Min(Nodes[cur].value.X, Nodes[Nodes[cur].parent].value.X);
+        Nodes[Nodes[cur].parent].value.Width = Math.Max(Nodes[cur].value.MaxX, Nodes[Nodes[cur].parent].value.MaxX) - Nodes[Nodes[cur].parent].value.X;
+
+        /*if (Nodes[cur].value.X < Nodes[Nodes[cur].parent].value.X)
+        {
+            Nodes[Nodes[cur].parent].value.Width += Nodes[Nodes[cur].parent].value.X - Nodes[cur].value.X;
+            Nodes[Nodes[cur].parent].value.X = Nodes[cur].value.X;
+        }*/
+
+        Console.WriteLine("{" + Nodes[cur].ToString() + "\n\t{" + Nodes[Nodes[cur].parent].ToString() + "\n\t}\n}");
+        return;
         if (Nodes[cur].value.Y < Nodes[Nodes[cur].parent].value.Y)
         {
             Nodes[Nodes[cur].parent].value.Height += Nodes[Nodes[cur].parent].value.Y - Nodes[cur].value.Y;
             Nodes[Nodes[cur].parent].value.Y = Nodes[cur].value.Y;
         }
-
+        
         if (Nodes[cur].value.MaxX > Nodes[Nodes[cur].parent].value.MaxX)
         {
             Nodes[Nodes[cur].parent].value.Width += Nodes[cur].value.MaxX - Nodes[Nodes[cur].parent].value.MaxX;
@@ -388,7 +432,6 @@ public class Tree
         double max_child_x = double.Max(Nodes[Nodes[Nodes[cur].parent].left].value.MaxX, Nodes[Nodes[Nodes[cur].parent].right].value.MaxX);
         if (Nodes[Nodes[cur].parent].value.MaxX > max_child_x)
         {
-            Console.WriteLine(Nodes[cur].parent + " " + cur);
             Nodes[Nodes[cur].parent].value.Width -= Nodes[Nodes[cur].parent].value.Width - max_child_x;
         }
 
@@ -411,7 +454,6 @@ public class Tree
         {
             Nodes[left_gc].parent = cur;
             Nodes[cur].right = left_gc;
-            AdjustParent(left_gc);
         }
 
         int p = Nodes[cur].parent;
@@ -432,8 +474,6 @@ public class Tree
         }
 
         Nodes[child].left = cur;
-        AdjustParent(cur);
-        AdjustParent(child);
 
         Nodes[cur].height = int.Max(TreeHeight(cur, Nodes[cur].left), TreeHeight(cur, Nodes[cur].right));
         Nodes[child].height = int.Max(TreeHeight(child, Nodes[child].left), TreeHeight(child, Nodes[child].right));
@@ -452,7 +492,6 @@ public class Tree
         {
             Nodes[right_gc].parent = cur;
             Nodes[cur].left = right_gc;
-            AdjustParent(right_gc);
         }
 
         int p = Nodes[cur].parent;
@@ -474,8 +513,6 @@ public class Tree
         }
 
         Nodes[child].right = cur;
-        AdjustParent(cur);
-        AdjustParent(child);
 
         Nodes[cur].height = int.Max(TreeHeight(cur, Nodes[cur].left), TreeHeight(cur, Nodes[cur].right));
         Nodes[child].height = int.Max(TreeHeight(child, Nodes[child].left), TreeHeight(child, Nodes[child].right));

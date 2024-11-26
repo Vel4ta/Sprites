@@ -38,7 +38,7 @@ export default function Player({ frames, incrimentX, incrimentY, duration, actio
                 const offsetY = actions[e.key].offsetY;
                 const x = ((position.current.x + xhelp) / incrimentX + .5) | 0;
                 const y = ((position.current.y + yhelp) / incrimentY) | 0;
-                console.log("here: ", xhelp, yhelp, position.current.x / incrimentX, position.current.y / incrimentY);
+                console.log("here: ", xhelp, yhelp, x, y);
                 if (y >= 0 && y < bounds.current.h && x >= 0 && x < bounds.current.w) {
                     //if (bounds.current.map[y][x]) {
                       //  xhelp = x * incrimentX - (position.current.x + xhelp);

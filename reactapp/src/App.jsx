@@ -90,16 +90,13 @@ export default class App extends Component {
     static renderSpriteSheetList(spritesheets, setSelection, world_map) {
         return (
             <>
+                <Table world_map={world_map} position={{ x: 100, y: 100 }} setSelection={setSelection} spritesheets={spritesheets.panda} display_amount={1} texture={spritesheets.table.info}></Table>
                 <Table world_map={world_map} position={{ x: 10, y: 300 }} setSelection={setSelection} spritesheets={spritesheets.fruit} display_amount={1} texture={spritesheets.table.info}></Table>
                 <Table world_map={world_map} position={{ x: 200, y: 500 }} setSelection={setSelection} spritesheets={spritesheets.gems} display_amount={2} texture={spritesheets.table.info}></Table>
                 <Table world_map={world_map} position={{ x: 400, y: 800 }} setSelection={setSelection} spritesheets={spritesheets.gems} display_amount={2} texture={spritesheets.table.info}></Table>
-                <Table world_map={world_map} position={{ x: 50, y: 700 }} setSelection={setSelection} spritesheets={spritesheets.soulder} display_amount={2} texture={spritesheets.table.info}></Table>
-                <Table world_map={world_map} position={{ x: 100, y: 100 }} setSelection={setSelection} spritesheets={spritesheets.panda} display_amount={1} texture={spritesheets.table.info}></Table>
-                <Table world_map={world_map} position={{ x: 257, y: 0 }} setSelection={setSelection} spritesheets={spritesheets.gems} display_amount={3} texture={spritesheets.table.info}></Table>
-                <Table world_map={world_map} position={{ x: 300, y: 500 }} setSelection={setSelection} spritesheets={spritesheets.gems} display_amount={4} texture={spritesheets.table.info}></Table>
-                <Table world_map={world_map} position={{ x: 60, y: 400 }} setSelection={setSelection} spritesheets={spritesheets.fruit} display_amount={2} texture={spritesheets.table.info}></Table>
-                <Table world_map={world_map} position={{ x: 160, y: 400 }} setSelection={setSelection} spritesheets={spritesheets.fruit} display_amount={3} texture={spritesheets.table.info}></Table>
-                <Table world_map={world_map} position={{ x: 260, y: 100 }} setSelection={setSelection} spritesheets={spritesheets.fruit} display_amount={3} texture={spritesheets.table.info}></Table>
+                <Table world_map={world_map} position={{ x: 700, y: 630 }} setSelection={setSelection} spritesheets={spritesheets.fruit} display_amount={1} texture={spritesheets.table.info}></Table>
+                <Table world_map={world_map} position={{ x: 900, y: 400 }} setSelection={setSelection} spritesheets={spritesheets.fruit} display_amount={1} texture={spritesheets.table.info}></Table>
+                <Table world_map={world_map} position={{ x: 500, y: 350 }} setSelection={setSelection} spritesheets={spritesheets.gems} display_amount={2} texture={spritesheets.table.info}></Table>
             </>
         );
     }
